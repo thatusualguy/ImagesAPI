@@ -1,3 +1,4 @@
+import binascii
 from pathlib import Path
 from re import match
 from base64 import b64decode
@@ -10,7 +11,7 @@ from fastapi.responses import FileResponse
 from ImageInfo import ImageInfo
 from ImageUpload import ImageUpload
 
-image_dir = "./images/"
+image_dir = "../images/"
 filename_regex = r"^\w+.jpg$"
 
 
@@ -57,14 +58,19 @@ def add_image(image: ImageUpload) -> None:
         raise HTTPException(status_code=500, detail="No image directory found")
 
     if not match(r"^\w+.jpg$", image.name):
-        raise HTTPException(status_code=400, detail="Invalid filename")
+        raise HTTPException(status_code=422, detail="Invalid filename")
 
     image_path: str = build_path(image.name)
-    # try:
-    with open(image_path, "wb") as f:
+    try:
+        f = open(image_path, "wb")
         f.write(b64decode(image.data))
-    # except:
-    #     raise HTTPException(status_code=500, detail="Unable to save image")
+    except binascii.Error:
+        if not f.closed:
+            f.close()
+        if os.path.isfile(image_path):
+            os.remove(image_path)
+
+        raise HTTPException(status_code=422, detail="Unable to decode image")
 
 
 def delete_image(image_name: str) -> None:

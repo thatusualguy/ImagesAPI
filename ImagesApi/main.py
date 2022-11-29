@@ -29,6 +29,6 @@ def add_image(image: ImageUpload):
 
 
 if __name__ == "__main__":
-    images.setup(directory="./images/")
+    images.setup(directory="../images/")
     # images.setup(directory=sys.argv[1])
     uvicorn.run(app, host="0.0.0.0", port=8000)
